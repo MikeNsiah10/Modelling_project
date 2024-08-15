@@ -1,6 +1,6 @@
 ## Modelling of synaptic plasticity 
 
-#Project Overview
+# Project Overview
 
 This repository is designed for working with the MNIST dataset, implementing various machine learning models, and exploring temporal coding techniques. It includes scripts for data handling, training, evaluation, and visualization, as well as specific implementations for Spike-Timing-Dependent Plasticity (STDP). The code leverages the Norse framework for these implementations.
 
