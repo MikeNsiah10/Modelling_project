@@ -9,10 +9,8 @@ This repository is designed for working with the MNIST dataset, implementing var
 ```
 /data                # Contains downloaded MNIST datasets
 /scripts             # Scripts for data processing and model training
-    ├── add_noise.py  # Script to add noise to the dataset
-    ├── train.py       # Script to train the model
-    ├── test.py        # Script to test the model
-    ├── evaluate.py     # Script to evaluate model performance
+    ├── train_eval_utils.py       # Script  with different function : add     
+noise, train the model, test the model, evaluate the model
     ├── model.py       # Model definitions (with or without STDP)
     └── mnist_pipeline.py # Script to download MNIST datasets
 /STDP                # Contains the STDP class for weight updates
