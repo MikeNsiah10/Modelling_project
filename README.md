@@ -7,8 +7,8 @@ This repository is designed for working with the MNIST dataset, implementing var
 ## Repository Structure
 
 ```
-/data                # Contains downloaded MNIST datasets
-/scripts             # Scripts for data processing and model training
+/data                              # Contains downloaded MNIST datasets
+/scripts                           # Scripts for data processing and model training
     ├── train_eval_utils.py        # Script  with different functions to add     
                                     noise, train , test and  evaluate the model 
     ├── model.py                   # Model definition without STDP
