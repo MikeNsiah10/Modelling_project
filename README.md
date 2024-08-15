@@ -14,14 +14,19 @@ noise, train , test and  evaluate the model
     ├── model.py       # Model definition without STDP
     ├── model_sdtp.py  # Model definition with STDP
     └── mnist_pipeline.py # Script to download MNIST datasets
-/STDP                # Contains the STDP class for weight updates
+/STDP
+    ├── stdp_updates.py  # Contains the STDP classes for weight updates
 /visualization       # Functions for plotting and visualizations
-    ├── plot_functions.py # Functions for creating plots
-    └── plots         # Directory to store visual outputs
-/temporal_coding     # Functions related to 2 differents schemes of temporal coding
+    ├── plot_encoded_images.py     # Script for visualizing and comparing FTTS and Phase encoding methods for MNIST images
+    ├── plot_membrane_voltages.py  # Script for plotting membrane voltages of SNN with FTTS and Phase encoding methods
+    └── plot_samples_images.py     # Script for plotting and saving sample images from the MNIST dataset
+    ├── plot_spikes.py    ## Script for visualizing and saving FTTS and Phase encoded spike trains
+/plots                # Directory to store visual outputs
+/Temporal_coding      # Functions related to 2 differents schemes of temporal coding
     ├── phase.py      # Phase coding functions
     └── ftts.py       # Functions for Fast Fourier Transform
-main.py              # Main implementation file to run the project
+requirements.txt      # file with the different libraries used on the project
+main.py               # Main implementation file to run the project
 ```
 
 ## Usage
