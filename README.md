@@ -83,6 +83,6 @@ This project includes various functionalities, including:
 
 - **STDP Implementation**: Utilizing the STDP class to update weights based on spike timings, providing insights into temporal learning mechanisms.
 
-- **Data Visualization**: Generating plots to visualize model performance with STDP and dataset characteristics, comparing metrics under different conditions (with and without noise). The visualizations also include data transformations applied to phase coding and TTFS inputs, stored in the `/visualization/plots` directory.
+- **Data Visualization**: Generating plots to visualize model performance with STDP and dataset characteristics, comparing metrics under different conditions (with and without noise). The visualizations also include data transformations applied to phase coding and TTFS inputs. The plots can be observed in the `plots` directory.
 
 - **Temporal Coding Techniques**: Exploring phase coding and time to first spike (TTFS) functions in conjunction with STDP, analyzing how these techniques affect the performance of the model.
