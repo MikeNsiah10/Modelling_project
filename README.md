@@ -31,8 +31,8 @@ To use this repository, follow these steps:
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/yourusername/repository-name.git
-   cd repository-name
+   git clone https://github.com/MikeNsiah10/Modelling_project.git
+   cd Modelling_project
    ```
 
 2. **Install Dependencies**:
