@@ -10,8 +10,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Import the function from mnist_pipeline
 from scripts.mnist_pipeline import download_and_preprocess_mnist
-from temporal_coding.first_time_to_spike import ftts_encode
-from temporal_coding.phase_coding import phase_encode
+from Temporal_coding.ftts import ftts_encode
+from Temporal_coding.phase_encode import phase_encode
 
 
 # Encode the images
