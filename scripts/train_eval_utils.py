@@ -152,13 +152,3 @@ def train_and_evaluate(model, device, train_loader, test_loader, optimizer, num_
     return results
 
 
-def train_evaluate_encoding(encoding):
-    results = {}
-    model = SNN(input_features=28*28, hidden_features1=128, hidden_features2=64, output_features=10, record=True).to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-
-    for noise_level in noise_levels:
-        result = train_and_evaluate(model, device, train_loader, test_loader, optimizer, num_epochs, encoding=encoding, num_steps=num_steps, noise_levels=[noise_level])
-        results[noise_level] = result[noise_level]
-
-    return results, model

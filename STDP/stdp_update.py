@@ -1,14 +1,8 @@
 from typing import Tuple
-
 import torch
-
 from norse.torch.functional.heaviside import heaviside
 
-#import os
-#import sys
 
-# Add the parent directory to sys.path
-#sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Define the STDPState and STDPParameters classes
 class STDPState:
@@ -90,7 +84,7 @@ class STDPParameters:
             self.bounding_func = lambda w: torch.clamp(w, w_min, w_max)
         else:
             self.bounding_func = lambda w: w
-
+         #gor convolutional layers
         self.convolutional = convolutional
         if self.convolutional:
             self.stride = stride

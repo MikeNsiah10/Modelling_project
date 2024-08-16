@@ -1,15 +1,11 @@
-import torch.optim as optim
 import torch.nn.functional as F
 from tqdm import tqdm
 from sklearn.metrics import confusion_matrix
 import seaborn as sns
 import os
 import torch
-from torch.utils.data import DataLoader
-from torchvision import datasets, transforms
 from scripts.mnist_pipeline import download_and_preprocess_mnist
-from scripts.mnist_pipeline import download_and_preprocess_mnist
-from scripts.train_eval_utils import train, test, add_noise, evaluate_model,train_and_evaluate #train_evaluate_encoding
+from scripts.train_eval_utils import train, test, add_noise, evaluate_model,train_and_evaluate 
 import torch
 from STDP.stdp_update import STDPState, STDPParameters, stdp_step_linear
 from Temporal_coding.ftts import ftts_encode
@@ -70,7 +66,8 @@ def plot_results(results, encoding,filename='training_results.png'):
     plt.savefig(os.path.join(plots_dir, filename))
     plt.close()
     print(f'Saved plot as: {filename}')
-#
+
+#main train and evaluation function with the model
 def train_evaluate_encoding(encoding):
     results = {}
     model = SNN(input_features=28*28, hidden_features1=128, hidden_features2=64, output_features=10, record=True).to(device)
@@ -81,6 +78,7 @@ def train_evaluate_encoding(encoding):
         results[noise_level] = result[noise_level]
 
     return results, model
+
 # Define parameters
 num_epochs = 4
 num_steps = 20
