@@ -26,6 +26,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from STDP.stdp_update import STDPState, STDPParameters, stdp_step_linear
 
+
 # Determine if a GPU is available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -112,20 +113,20 @@ class SNN(nn.Module):
             # Forward pass through the first LIF layer
             z, s1 = self.l1(z, s1)
             # Apply linear transformation and forward pass through the second LIF layer
-            z = self.fc_hidden(s1.z)
+            z = self.fc_hidden(z)
             z, s2 = self.l2(z, s2)
             # Apply linear transformation and forward pass through the readout layer
-            z = self.fc_out(s2.z)
+            z = self.fc_out(z)
             vo, so = self.out(z, so)
 
             # Record states
             if self.record:
-                self.recording.lif0.z[ts, :] = s1.z
-                self.recording.lif0.v[ts, :] = s1.v
-                self.recording.lif0.i[ts, :] = s1.i
-                self.recording.lif1.z[ts, :] = s2.z
-                self.recording.lif1.v[ts, :] = s2.v
-                self.recording.lif1.i[ts, :] = s2.i
+                self.recording.lif0.z[ts, :] = s1[1]
+                self.recording.lif0.v[ts, :] = s1[0]
+                self.recording.lif0.i[ts, :] = s1[2]
+                self.recording.lif1.z[ts, :] = s2[1]
+                self.recording.lif1.v[ts, :] = s2[0]
+                self.recording.lif1.i[ts, :] = s2[2]
                 self.recording.readout.v[ts, :] = so.v
                 self.recording.readout.i[ts, :] = so.i
 
@@ -134,9 +135,9 @@ class SNN(nn.Module):
 
             # Perform STDP step
             #pre synaptic spikes
-            z_pre = s1.z
+            z_pre = s1[1]
             #post synapnatic spikes
-            z_post = s2.z
+            z_post = s2[1]
             self.fc_hidden.weight.data = self.fc_hidden.weight.data.to(device)
             #modify weights  of linear layer
             self.fc_hidden.weight.data, self.stdp_state = stdp_step_linear(z_pre, z_post, self.fc_hidden.weight.data, self.stdp_state, self.stdp_params)

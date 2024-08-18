@@ -11,6 +11,8 @@ from torchvision import datasets, transforms
 from typing import Tuple
 from norse.torch.functional.heaviside import heaviside
 import torch.nn as nn
+
+
 # Determine if a GPU is available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -61,9 +63,7 @@ class SNN(nn.Module):
         self.output_features = output_features
         self.record = record
 
-        # Initialize STDP parameters and state
         
-        self.voltages = []
 
     def forward(self, x):
         """
@@ -96,27 +96,27 @@ class SNN(nn.Module):
             # Forward pass through the first LIF layer
             z, s1 = self.l1(z, s1)
             # Apply linear transformation and forward pass through the second LIF layer
-            z = self.fc_hidden(s1.z)
+            z = self.fc_hidden(z)
             z, s2 = self.l2(z, s2)
             # Apply linear transformation and forward pass through the readout layer
-            z = self.fc_out(s2.z)
+            z = self.fc_out(z)
             vo, so = self.out(z, so)
 
-            # Record states
+            # Record states(z=spikes,v=voltages,i=input_current)
             if self.record:
-                self.recording.lif0.z[ts, :] = s1.z
-                self.recording.lif0.v[ts, :] = s1.v
-                self.recording.lif0.i[ts, :] = s1.i
-                self.recording.lif1.z[ts, :] = s2.z
-                self.recording.lif1.v[ts, :] = s2.v
-                self.recording.lif1.i[ts, :] = s2.i
+                self.recording.lif0.z[ts, :] = s1[1]
+                self.recording.lif0.v[ts, :] = s1[0]
+                self.recording.lif0.i[ts, :] = s1[2]
+                self.recording.lif1.z[ts, :] = s2[1]
+                self.recording.lif1.v[ts, :] = s2[0]
+                self.recording.lif1.i[ts, :] = s2[2]
                 self.recording.readout.v[ts, :] = so.v
                 self.recording.readout.i[ts, :] = so.i
 
             # Collect output voltages
             voltages += [vo]
 
-            
+           
 
         # Stack voltages into a tensor
         self.voltages = torch.stack(voltages)
