@@ -23,6 +23,12 @@ def download_and_preprocess_mnist(data_dir='./data'):
         transform=transform
     )
 
+    # Check if the dataset was downloaded or loaded from local files
+    if os.path.exists(os.path.join(data_dir, 'MNIST/raw/train-images-idx3-ubyte')):
+        print("Training data loaded from local files.")
+    else:
+        print("Training data downloaded.")
+
     # Force the dataset to be processed and cached
     print(f"Number of training samples: {len(train_data)}")
 
@@ -36,15 +42,21 @@ def download_and_preprocess_mnist(data_dir='./data'):
         transform=transform
     )
 
-    # Force the dataset to be processed and cached
+    # Check if the dataset was downloaded or loaded from local files
+    if os.path.exists(os.path.join(data_dir, 'MNIST/raw/t10k-images-idx3-ubyte')):
+        print("Test data loaded from local files.")
+    else:
+        print("Test data downloaded.")
+
     print(f"Number of test samples: {len(test_data)}")
 
     test_loader = torch.utils.data.DataLoader(
         test_data, batch_size=BATCH_SIZE, drop_last=True
     )
 
-    print('MNIST dataset downloaded and processed successfully')
+    
     return train_loader, test_loader
 
+# Main execution
 if __name__ == "__main__":
     train_loader, test_loader = download_and_preprocess_mnist()

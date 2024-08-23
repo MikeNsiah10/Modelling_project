@@ -1,17 +1,19 @@
 import sys
 import os
-import matplotlib.pyplot as plt
-import numpy as np
-
 # Add the root directory to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+import matplotlib.pyplot as plt
+import numpy as np
+from scripts.mnist_pipeline import download_and_preprocess_mnist
+
 
 # Import the function from mnist_pipeline
 from scripts.mnist_pipeline import download_and_preprocess_mnist
 
-# Use the function to get data loaders
+# load mnist data
 train_loader, test_loader = download_and_preprocess_mnist()
-print(f'Number of batches in train_loader: {len(train_loader)}')
+
 
 # Define the path for the plots directory in the main project directory
 plots_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'plots')

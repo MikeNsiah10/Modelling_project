@@ -1,22 +1,34 @@
+import sys
+import os
+# Add the project root directory to sys.path to allow importing from parent directories
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from tqdm import tqdm
 import torch
 from Temporal_coding.ftts import ftts_encode
 from Temporal_coding.phase_encode import phase_encode
-from scripts.model_stdp import SNN, SNNState
+from scripts.spiking_model import SNN, SNNState
 import torch.nn.functional as F
+from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
+from scripts.mnist_pipeline import download_and_preprocess_mnist
 
-# Set device
+# Set device to GPU if available, otherwise use CPU
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# Define the function to add noise to the data
-def add_noise(images, noise_level=0.1):
-    noise = torch.randn_like(images) * noise_level
-    noisy_images = images + noise
-    return torch.clamp(noisy_images, 0, 1)
+# Load MNIST data
+train_loader, test_loader = download_and_preprocess_mnist()
 
-# Define the training function
-def train(model, device, train_loader, optimizer, epoch, encoding='ftts', num_steps=20, noise_level=0.1):
-    model.train()
+# Define training parameters
+num_epochs = 8
+num_steps = 20  
+
+
+# Define the training function without noise addition
+def train(model, device, train_loader, optimizer, epoch, encoding='ftts', num_steps=20):
+    model.train()  
     train_loss = 0
     correct = 0
     progress_bar = tqdm(enumerate(train_loader), total=len(train_loader), desc=f'Training Epoch {epoch}', leave=False)
@@ -24,10 +36,7 @@ def train(model, device, train_loader, optimizer, epoch, encoding='ftts', num_st
     for batch_idx, (data, target) in progress_bar:
         if data.size(0) == train_loader.batch_size:  # Process only full batches
             data, target = data.to(device), target.to(device)
-            optimizer.zero_grad()
-
-            # Add noise to the data
-            data = add_noise(data, noise_level)
+            optimizer.zero_grad()  # Reset gradients
 
             # Encode the data based on the specified encoding method
             if encoding == 'ftts':
@@ -38,18 +47,22 @@ def train(model, device, train_loader, optimizer, epoch, encoding='ftts', num_st
                 raise ValueError("Invalid encoding type. Choose 'ftts' or 'phase'.")
 
             output = model(encoded_data)
-            output = output.mean(0)  # Averaging over the time dimension
+            output = output.mean(0)  
             loss = F.cross_entropy(output, target)
-            loss.backward()
-            optimizer.step()
+            loss.backward()  # Backpropagation
+            optimizer.step()  # Update model weights
 
-            train_loss += loss.item() * data.size(0)  # Multiply loss by batch size
-            pred = output.argmax(dim=1, keepdim=True)  # Get the index of the max log-probability
-            correct += pred.eq(target.view_as(pred)).sum().item()
+            train_loss += loss.item() * data.size(0)  
+            # Get the index of the max log-probability
+            pred = output.argmax(dim=1, keepdim=True) 
+             
+             # Count correct predictions
+            correct += pred.eq(target.view_as(pred)).sum().item()  
+            # Display loss for the current batch
+            progress_bar.set_postfix({'loss': loss.item()})  
 
-            progress_bar.set_postfix({'loss': loss.item()})  # Display loss for the current batch
-
-    train_loss /= (len(train_loader.dataset) - (len(train_loader.dataset) % train_loader.batch_size))  # Adjust for dropped batch
+    # Adjust for dropped batch in loss and accuracy calculations
+    train_loss /= (len(train_loader.dataset) - (len(train_loader.dataset) % train_loader.batch_size))
     train_accuracy = 100. * correct / (len(train_loader.dataset) - (len(train_loader.dataset) % train_loader.batch_size))
 
     print(f'\nTrain set: Average loss: {train_loss:.4f}, Accuracy: {correct}/{(len(train_loader.dataset) - (len(train_loader.dataset) % train_loader.batch_size))} '
@@ -57,18 +70,15 @@ def train(model, device, train_loader, optimizer, epoch, encoding='ftts', num_st
 
     return train_loss, train_accuracy
 
-
 # Define the testing function
-def test(model, device, test_loader, epoch, encoding='ftts', num_steps=20, noise_level=0.1):
-    model.eval()
+def test(model, device, test_loader, epoch, encoding='ftts', num_steps=20):
+    model.eval()  
     test_loss = 0
     correct = 0
-    with torch.no_grad():
+
+    with torch.no_grad():  # Disable gradient calculation
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
-
-            # Add noise to the data
-            data = add_noise(data, noise_level)
 
             # Encode the data based on the specified encoding method
             if encoding == 'ftts':
@@ -79,33 +89,61 @@ def test(model, device, test_loader, epoch, encoding='ftts', num_steps=20, noise
                 raise ValueError("Invalid encoding type. Choose 'ftts' or 'phase'.")
 
             output = model(encoded_data)
-            output = output.mean(0)  # Average over time steps
-            test_loss += F.cross_entropy(output, target, reduction='sum').item()
+            output = output.mean(0)  
+            test_loss += F.cross_entropy(output, target, reduction='sum').item()  # Accumulate loss
             pred = output.argmax(dim=1, keepdim=True)
-            correct += pred.eq(target.view_as(pred)).sum().item()
+            # get correct predictions
+            correct += pred.eq(target.view_as(pred)).sum().item()  
 
+    # Calculate average loss and accuracy
     test_loss /= len(test_loader.dataset)
     accuracy = 100. * correct / len(test_loader.dataset)
     print(f'Test set: Average loss: {test_loss:.4f}, Accuracy: {correct}/{len(test_loader.dataset)} ({accuracy:.2f}%)')
+    
     return test_loss, accuracy
 
+# Define the function to train and evaluate the model without noise
+def train_and_evaluate(model, device, train_loader, test_loader, optimizer, num_epochs, encoding, num_steps):
+    results = {}
 
+    train_losses = []
+    train_accuracies = []
+    test_losses = []
+    test_accuracies = []
 
+    # Loop through epochs to train and evaluate the model
+    for epoch in range(1, num_epochs + 1):
+        train_loss, train_accuracy = train(model, device, train_loader, optimizer, epoch, encoding, num_steps)
+        test_loss, test_accuracy = test(model, device, test_loader, epoch, encoding, num_steps)
+
+        train_losses.append(train_loss)
+        train_accuracies.append(train_accuracy)
+        test_losses.append(test_loss)
+        test_accuracies.append(test_accuracy)
+
+    # Store the results
+    results = {
+        'train_losses': train_losses,
+        'train_accuracies': train_accuracies,
+        'test_losses': test_losses,
+        'test_accuracies': test_accuracies
+    }
+
+    return results
 
 # Define the function to evaluate the model
-def evaluate_model(model, device, test_loader, num_steps, encoding='ftts', noise_level=0.1):
-    model.eval()
+def evaluate_model(model, device, test_loader, num_steps, encoding='ftts'):
+    #evaluate model
+    model.eval() 
     true_labels = []
     predicted_labels = []
-
+    # Disable gradient calculation
     with torch.no_grad():
         for batch_idx, (data, target) in enumerate(test_loader):
             if data.size(0) == test_loader.batch_size:
                 data, target = data.to(device), target.to(device)
 
-                # Add noise to the data
-                data = add_noise(data, noise_level)
-
+                # Encode the data based on the specified encoding method
                 if encoding == 'ftts':
                     encoded_data = ftts_encode(data, num_steps).to(device)
                 elif encoding == 'phase':
@@ -114,41 +152,24 @@ def evaluate_model(model, device, test_loader, num_steps, encoding='ftts', noise
                     raise ValueError("Invalid encoding type. Choose 'ftts' or 'phase'.")
 
                 output = model(encoded_data)
-                output = output.mean(0)
+                output = output.mean(0)  
+                  # Get the index of the max log-probability
                 pred = output.argmax(dim=1, keepdim=True)
-                true_labels.extend(target.cpu().numpy())
-                predicted_labels.extend(pred.cpu().numpy())
-
+                
+                 # Store true labels
+                true_labels.extend(target.cpu().numpy()) 
+                # Store predicted labels
+                predicted_labels.extend(pred.cpu().numpy())  
+    
     return true_labels, predicted_labels
 
+# Main function to train and evaluate the model with the specified encoding
+def train_evaluate_encoding(encoding):
+    # Initialize the SNN model
+    model = SNN(input_features=28*28, hidden_features1=64, hidden_features2=128, output_features=10, record=True).to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)  
 
-# Define the function to train and evaluate the model
-def train_and_evaluate(model, device, train_loader, test_loader, optimizer, num_epochs, encoding, num_steps, noise_levels):
-    results = {}
-    for noise_level in noise_levels:
-        print(f"Training with {encoding} encoding and noise level: {noise_level}")
+    # Train and evaluate the model
+    results = train_and_evaluate(model, device, train_loader, test_loader, optimizer, num_epochs, encoding=encoding, num_steps=num_steps)
 
-        train_losses = []
-        train_accuracies = []
-        test_losses = []
-        test_accuracies = []
-
-        for epoch in range(1, num_epochs + 1):
-            train_loss, train_accuracy = train(model, device, train_loader, optimizer, epoch, encoding, num_steps, noise_level)
-            test_loss, test_accuracy = test(model, device, test_loader, epoch, encoding, num_steps, noise_level)
-
-            train_losses.append(train_loss)
-            train_accuracies.append(train_accuracy)
-            test_losses.append(test_loss)
-            test_accuracies.append(test_accuracy)
-
-        results[noise_level] = {
-            'train_losses': train_losses,
-            'train_accuracies': train_accuracies,
-            'test_losses': test_losses,
-            'test_accuracies': test_accuracies
-        }
-
-    return results
-
-
+    return results, model

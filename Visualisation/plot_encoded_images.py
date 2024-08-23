@@ -1,21 +1,18 @@
-
 import sys
 import os
+# Add the root directory to sys.path
+#very important please dont change it
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-
-# Add the root directory to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-# Import the function from mnist_pipeline
 from scripts.mnist_pipeline import download_and_preprocess_mnist
 from Temporal_coding.ftts import ftts_encode
 from Temporal_coding.phase_encode import phase_encode
 
 
-# Encode the images
-#encoded_spikes = ftts_encode(images)
+
 
 # Define the path for the plots directory in the main project directory
 plots_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'plots')

@@ -64,6 +64,7 @@ class SNN(nn.Module):
         self.record = record
 
         
+        self.voltages = []
 
     def forward(self, x):
         """
@@ -102,21 +103,24 @@ class SNN(nn.Module):
             z = self.fc_out(z)
             vo, so = self.out(z, so)
 
-            # Record states(z=spikes,v=voltages,i=input_current)
+            # Record states(z=spikes,v=voltages,i=current)
             if self.record:
-                self.recording.lif0.z[ts, :] = s1[1]
-                self.recording.lif0.v[ts, :] = s1[0]
+                #print("s1 type:",type (s1))
+                #print("s1 value:",s1)
+                #print("so type",type(so))
+                self.recording.lif0.z[ts, :] = s1[0]
+                self.recording.lif0.v[ts, :] = s1[1]
                 self.recording.lif0.i[ts, :] = s1[2]
-                self.recording.lif1.z[ts, :] = s2[1]
-                self.recording.lif1.v[ts, :] = s2[0]
-                self.recording.lif1.i[ts, :] = s2[2]
+                self.recording.lif1.z[ts, :] = s2[0]
+                self.recording.lif1.v[ts, :] = s2[1]
+                self.recording.lif1.i[ts, :] = s2[0]
                 self.recording.readout.v[ts, :] = so.v
                 self.recording.readout.i[ts, :] = so.i
 
             # Collect output voltages
             voltages += [vo]
 
-           
+            
 
         # Stack voltages into a tensor
         self.voltages = torch.stack(voltages)

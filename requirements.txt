@@ -1,9 +1,9 @@
-torch
-torchvision
-norse
+torch==2.3.1
+torchvision==0.18.1
+-e git+https://github.com/norse/norse#egg=norse
 matplotlib
 scikit-learn
 seaborn
 tensorboard
-numpy
+numpy<2.0
 tqdm

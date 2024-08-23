@@ -1,19 +1,18 @@
 import sys
 import os
+# Add the root directory to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import numpy as np
 import torch
-
-# Add the root directory to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-# Import the function from mnist_pipeline
 from scripts.mnist_pipeline import download_and_preprocess_mnist
 from Temporal_coding.ftts import ftts_encode
 from Temporal_coding.phase_encode import phase_encode
-from STDP.stdp_update import STDPState, STDPParameters, stdp_step_linear
-from scripts.model_stdp import SNN, SNNState
+from scripts.spiking_model import SNN, SNNState
+
+
 
 # Set device (GPU if available)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -25,13 +24,13 @@ plots_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'plot
 if not os.path.exists(plots_dir):
     os.makedirs(plots_dir)
 
-# Use the function to get data loaders
+# load data
 train_loader, test_loader = download_and_preprocess_mnist()
 print(f'Number of batches in train_loader: {len(train_loader)}')
 
 # Select a sample image from the MNIST dataset
-example_data, example_target = next(iter(train_loader))
-example_image = example_data[0].unsqueeze(0)  # Shape: (1, 1, 28, 28)
+image, target = next(iter(train_loader))
+example_image = image[0].unsqueeze(0)  # Shape: (1, 1, 28, 28)
 
 # Number of time steps
 num_steps = 30
@@ -41,18 +40,18 @@ ftts_input = ftts_encode(example_image, num_steps).to(device)
 phase_input = phase_encode(example_image, num_steps).to(device)
 
 # Initialize the SNN for both encoding methods
-example_snn_ftts = SNN(input_features=28*28, hidden_features1=64, hidden_features2=128, output_features=10, record=True).to(device)
-example_snn_phase = SNN(input_features=28*28, hidden_features1=64, hidden_features2=128, output_features=10, record=True).to(device)
+model_ftts = SNN(input_features=28*28, hidden_features1=64, hidden_features2=128, output_features=10, record=True).to(device)
+model_phase = SNN(input_features=28*28, hidden_features1=64, hidden_features2=128, output_features=10, record=True).to(device)
 
 # Get the readout voltages for FTTS encoding
-ftts_readout_voltages = example_snn_ftts(ftts_input)
+ftts_readout_voltages = model_ftts(ftts_input)
 
 # Get the readout voltages for Phase encoding
-phase_readout_voltages = example_snn_phase(phase_input)
+phase_readout_voltages = model_phase(phase_input)
 
 # Spiking activities for LIF layer 1
-ftts_spiking_activity_lif1 = example_snn_ftts.recording.lif0.z
-phase_spiking_activity_lif1 = example_snn_phase.recording.lif0.z
+ftts_spiking_activity_lif1 = model_ftts.recording.lif0.z
+phase_spiking_activity_lif1 = model_phase.recording.lif0.z
 
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
