@@ -26,17 +26,22 @@ num_epochs = 8
 num_steps = 20  
 
 
-# Define the training function without noise addition
+#define training function
 def train(model, device, train_loader, optimizer, epoch, encoding='ftts', num_steps=20):
-    model.train()  
+    model.train()
     train_loss = 0
     correct = 0
+    #epoch spike and synaptic operation
+    epoch_spike_count = 0
+    epoch_synaptic_operations = 0
     progress_bar = tqdm(enumerate(train_loader), total=len(train_loader), desc=f'Training Epoch {epoch}', leave=False)
-
+    
     for batch_idx, (data, target) in progress_bar:
         if data.size(0) == train_loader.batch_size:  # Process only full batches
             data, target = data.to(device), target.to(device)
-            optimizer.zero_grad()  # Reset gradients
+            #reset the spike count and synaptic operation
+            model.reset()
+            optimizer.zero_grad(set_to_none=True)
 
             # Encode the data based on the specified encoding method
             if encoding == 'ftts':
@@ -47,28 +52,66 @@ def train(model, device, train_loader, optimizer, epoch, encoding='ftts', num_st
                 raise ValueError("Invalid encoding type. Choose 'ftts' or 'phase'.")
 
             output = model(encoded_data)
-            output = output.mean(0)  
+            output = output.mean(0)  # Averaging over the time dimension
+
             loss = F.cross_entropy(output, target)
-            loss.backward()  # Backpropagation
-            optimizer.step()  # Update model weights
+            loss.backward()
+            optimizer.step()
 
-            train_loss += loss.item() * data.size(0)  
-            # Get the index of the max log-probability
-            pred = output.argmax(dim=1, keepdim=True) 
-             
-             # Count correct predictions
-            correct += pred.eq(target.view_as(pred)).sum().item()  
-            # Display loss for the current batch
-            progress_bar.set_postfix({'loss': loss.item()})  
+            train_loss += loss.item() * data.size(0)  # Multiply loss by batch size
+            pred = output.argmax(dim=1, keepdim=True)  # Get the index of the max log-probability
+            correct += pred.eq(target.view_as(pred)).sum().item()
+            epoch_spike_count += model.spike_count
+            epoch_synaptic_operations += model.synaptic_operations
 
-    # Adjust for dropped batch in loss and accuracy calculations
-    train_loss /= (len(train_loader.dataset) - (len(train_loader.dataset) % train_loader.batch_size))
+            progress_bar.set_postfix({'loss': loss.item()})  # Display loss for the current batch
+
+    train_loss /= (len(train_loader.dataset) - (len(train_loader.dataset) % train_loader.batch_size))  # Adjust for dropped batch
     train_accuracy = 100. * correct / (len(train_loader.dataset) - (len(train_loader.dataset) % train_loader.batch_size))
 
     print(f'\nTrain set: Average loss: {train_loss:.4f}, Accuracy: {correct}/{(len(train_loader.dataset) - (len(train_loader.dataset) % train_loader.batch_size))} '
           f'({train_accuracy:.0f}%)\n')
 
-    return train_loss, train_accuracy
+    return train_loss, train_accuracy, epoch_spike_count, epoch_synaptic_operations
+
+# Define the function to train and evaluate the model 
+def train_and_evaluate(model, device, train_loader, test_loader, optimizer, num_epochs, encoding, num_steps):
+    results = {}
+
+    train_losses = []
+    train_accuracies = []
+    test_losses = []
+    test_accuracies = []
+    total_spikes = 0
+    total_synaptic_operations = 0
+
+    for epoch in range(1, num_epochs + 1):
+        train_loss, train_accuracy, epoch_spike_count, epoch_synaptic_operations = train(
+            model, device, train_loader, optimizer, epoch, encoding, num_steps
+        )
+        test_loss, test_accuracy = test(model, device, test_loader, epoch, encoding, num_steps)
+
+        train_losses.append(train_loss)
+        train_accuracies.append(train_accuracy)
+        test_losses.append(test_loss)
+        test_accuracies.append(test_accuracy)
+
+        # Accumulate spikes and synaptic operations across all epochs
+        total_spikes += epoch_spike_count
+        total_synaptic_operations += epoch_synaptic_operations
+
+    print(f'Total spikes: {total_spikes}, Total Synaptic operations: {total_synaptic_operations}')
+
+    results = {
+        'train_losses': train_losses,
+        'train_accuracies': train_accuracies,
+        'test_losses': test_losses,
+        'test_accuracies': test_accuracies,
+        'total_spikes': [total_spikes],
+        'total_synaptic_operations': [total_synaptic_operations]
+    }
+
+    return results
 
 # Define the testing function
 def test(model, device, test_loader, epoch, encoding='ftts', num_steps=20):
@@ -102,34 +145,6 @@ def test(model, device, test_loader, epoch, encoding='ftts', num_steps=20):
     
     return test_loss, accuracy
 
-# Define the function to train and evaluate the model without noise
-def train_and_evaluate(model, device, train_loader, test_loader, optimizer, num_epochs, encoding, num_steps):
-    results = {}
-
-    train_losses = []
-    train_accuracies = []
-    test_losses = []
-    test_accuracies = []
-
-    # Loop through epochs to train and evaluate the model
-    for epoch in range(1, num_epochs + 1):
-        train_loss, train_accuracy = train(model, device, train_loader, optimizer, epoch, encoding, num_steps)
-        test_loss, test_accuracy = test(model, device, test_loader, epoch, encoding, num_steps)
-
-        train_losses.append(train_loss)
-        train_accuracies.append(train_accuracy)
-        test_losses.append(test_loss)
-        test_accuracies.append(test_accuracy)
-
-    # Store the results
-    results = {
-        'train_losses': train_losses,
-        'train_accuracies': train_accuracies,
-        'test_losses': test_losses,
-        'test_accuracies': test_accuracies
-    }
-
-    return results
 
 # Define the function to evaluate the model
 def evaluate_model(model, device, test_loader, num_steps, encoding='ftts'):

@@ -17,6 +17,10 @@ import torch.nn as nn
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Define the SNNState and SNN classes
+# Determine if a GPU is available
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# Define the SNNState and SNN classes
 class SNNState(NamedTuple):
     """
     State of the Spiking Neural Network (SNN) during simulation.
@@ -46,9 +50,9 @@ class SNN(nn.Module):
         super(SNN, self).__init__()
 
         # Initialize the first LIF recurrent cell layer
-        self.l1 = LIFRecurrentCell(input_features, hidden_features1, p=LIFParameters(alpha=100, v_th=torch.tensor(0.1)), dt=dt)
+        self.l1 = LIFRecurrentCell(input_features, hidden_features1, p=LIFParameters(alpha=90, v_th=torch.tensor(0.1)), dt=dt)
         # Initialize the second LIF recurrent cell layer
-        self.l2 = LIFRecurrentCell(hidden_features2, hidden_features2, p=LIFParameters(alpha=100, v_th=torch.tensor(0.1)), dt=dt)
+        self.l2 = LIFRecurrentCell(hidden_features2, hidden_features2, p=LIFParameters(alpha=90, v_th=torch.tensor(0.1)), dt=dt)
         # Linear transformation from first hidden layer to second hidden layer
         self.fc_hidden = nn.Linear(hidden_features1, hidden_features2, bias=False).to(device)
         # Linear transformation from second hidden layer to output
@@ -62,9 +66,18 @@ class SNN(nn.Module):
         self.hidden_features2 = hidden_features2
         self.output_features = output_features
         self.record = record
+        self.spike_count=0
+        self.synaptic_operations=0
 
-        
+        # Initialize STDP parameters and state
+        #self.stdp_params = STDPParameters()
+        #self.stdp_state = STDPState(t_pre=torch.zeros(hidden_features1, device=device), t_post=torch.zeros(hidden_features2, device=device))
         self.voltages = []
+    #reset synaptic spike count and operations
+    def reset(self):
+        self.spike_count=0
+        self.synaptic_operations=0
+        
 
     def forward(self, x):
         """
@@ -81,6 +94,7 @@ class SNN(nn.Module):
         seq_length, batch_size, _, _, _ = x.shape
         s1 = s2 = so = None
         voltages = []
+        
 
         # Initialize recording if required
         if self.record:
@@ -96,14 +110,18 @@ class SNN(nn.Module):
             z = x[ts, :, :, :].view(-1, self.input_features)
             # Forward pass through the first LIF layer
             z, s1 = self.l1(z, s1)
+            self.spike_count+=torch.sum(s1[0]).item()
+            self.synaptic_operations+=z.numel()
             # Apply linear transformation and forward pass through the second LIF layer
             z = self.fc_hidden(z)
             z, s2 = self.l2(z, s2)
+            self.spike_count+=torch.sum(s1[0]).item()
+            self.synaptic_operations+=z.numel()
             # Apply linear transformation and forward pass through the readout layer
             z = self.fc_out(z)
             vo, so = self.out(z, so)
 
-            # Record states(z=spikes,v=voltages,i=current)
+            # Record states
             if self.record:
                 #print("s1 type:",type (s1))
                 #print("s1 value:",s1)
@@ -120,8 +138,7 @@ class SNN(nn.Module):
             # Collect output voltages
             voltages += [vo]
 
-            
-
+           
         # Stack voltages into a tensor
         self.voltages = torch.stack(voltages)
         return self.voltages

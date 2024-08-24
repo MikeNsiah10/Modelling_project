@@ -16,10 +16,10 @@ import matplotlib.pyplot as plt
 # Set device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# Define training parameters
+# Define parameters
+#if changes are made here make sure to change also in train_eval_utils
 num_epochs = 8
 num_steps = 20  
-learning_rate = 0.001
 
 # Load MNIST data
 train_loader, test_loader = download_and_preprocess_mnist()
