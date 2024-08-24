@@ -2,29 +2,29 @@
 
 # Project Overview
 
-This repository is designed for working with the MNIST dataset, implementing various machine learning models, and exploring temporal coding techniques. It includes scripts for data handling, training, evaluation, and visualization, as well as specific implementations for Spike-Timing-Dependent Plasticity (STDP). The code leverages the Norse framework for these implementations.
+This repository is designed for working with the MNIST dataset, implementing various machine learning models, and exploring temporal coding techniques with surrogate gradient. It includes scripts for data handling, training, evaluation, and visualization. The code leverages the Norse framework for these implementations.
 
 
 ## Repository Structure
 ```
 /data                              # Contains downloaded MNIST datasets
 /scripts                           # Scripts for data processing and model training
-    ├── train_eval_utils.py        # Script  with different functions to add     
-                                    noise, train , test and  evaluate the model 
+    ├── train_eval_utils.py        # Script  with different functions to train , test and  evaluate the model 
     ├── model.py                   # Model definition without STDP
-    ├── model_sdtp.py              # Model definition with STDP
+    ├── spiking_model.py              # Model and state during simualtion definition
     └── mnist_pipeline.py          # Script to download MNIST datasets
-/STDP
-    ├── stdp_updates.py            # Contains the STDP classes for weight updates
 /visualization                     # Functions for plotting and visualizations
+    ├── plot_confusion_matrix.py     # Script for plotting the confusion matrix
     ├── plot_encoded_images.py     # Script for visualizing and comparing FTTS and Phase encoding methods for MNIST images
     ├── plot_membrane_voltages.py  # Script for plotting membrane voltages of SNN with FTTS and Phase encoding methods
+    └── plot_results.py     # Script for plotting and saving the accuracies, losses, and energy consumptions of the different strategies
     └── plot_samples_images.py     # Script for plotting and saving sample images from the MNIST dataset
-    ├── plot_spikes.py             # Script for visualizing and saving FTTS and Phase encoded spike trains
-/plots                             # Directory to store visual outputs
+    ├── plot_spikes.py             # Script for visualizing and saving an animation of spiking activity over time
+ ├── plot_spiking_activity.py             # Script for visualizing and saving FTTS and Phase encoded spike trains
+/plots                             # Directory to store visual outputs 
 /Temporal_coding                   # Functions related to 2 differents schemes of temporal coding
-    ├── phase.py                   # Phase coding functions
-    └── ftts.py                    # Functions for Fast Fourier Transform
+    ├── phase.py                   # Phase coding function
+    └── ftts.py                    # Function for First time to spike 
 requirements.txt                   # file with the different libraries used on the project
 main.py                            # Main implementation file to run the project
 ```
@@ -80,3 +80,5 @@ It is recommended to use a virtual environment to manage the dependencies for th
    ```
       python Visualisation/plot_sample_images.py
    ```
+## Purpose
+This code is implemented to make a comparative study between two different schemes of temporal coding: phase coding and time to first spike. The comparison is made examinating the accuracy, the loss and the energy efficiency(spikes generated during simulation of the model during training) for both stategies with the SuperSpike algorithm (surrogate gradient) from Norse.
