@@ -50,9 +50,11 @@ class SNN(nn.Module):
         super(SNN, self).__init__()
 
         # Initialize the first LIF recurrent cell layer
-        self.l1 = LIFRecurrentCell(input_features, hidden_features1, p=LIFParameters(alpha=90, v_th=torch.tensor(0.1)), dt=dt)
+        self.l1 = LIFRecurrentCell(input_features, hidden_features1, p=LIFParameters(alpha=90, v_th=torch.tensor(0.1),method="super"), dt=dt)
         # Initialize the second LIF recurrent cell layer
-        self.l2 = LIFRecurrentCell(hidden_features2, hidden_features2, p=LIFParameters(alpha=90, v_th=torch.tensor(0.1)), dt=dt)
+        #method set to super applies the superspike surrogate gradient learning
+        #other method includes headvise,tanh, triangle(recommended for conv layers), circ, and heavi_erfc
+        self.l2 = LIFRecurrentCell(hidden_features2, hidden_features2, p=LIFParameters(alpha=90, v_th=torch.tensor(0.1),method="super"), dt=dt)
         # Linear transformation from first hidden layer to second hidden layer
         self.fc_hidden = nn.Linear(hidden_features1, hidden_features2, bias=False).to(device)
         # Linear transformation from second hidden layer to output
@@ -69,9 +71,7 @@ class SNN(nn.Module):
         self.spike_count=0
         self.synaptic_operations=0
 
-        # Initialize STDP parameters and state
-        #self.stdp_params = STDPParameters()
-        #self.stdp_state = STDPState(t_pre=torch.zeros(hidden_features1, device=device), t_post=torch.zeros(hidden_features2, device=device))
+       
         self.voltages = []
     #reset synaptic spike count and operations
     def reset(self):
