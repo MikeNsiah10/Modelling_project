@@ -43,7 +43,7 @@ To use this repository, follow these steps:
 2. Setting Up a Python Environment
 It is recommended to use a virtual environment to manage the dependencies for this project. A virtual environment helps to isolate your project's dependencies from your global Python environment, avoiding potential conflicts.
 ```
-    # Create a virtual environment in a directory named 'env'
+   # Create a virtual environment in a directory named 'env'
    python3 -m venv env
 
     # Activate the virtual environment
@@ -56,20 +56,20 @@ It is recommended to use a virtual environment to manage the dependencies for th
 3. Install Dependencies:
    Make sure you have the necessary libraries installed. You can use pip to install them:
    ```
-      pip install -r requirements.txt
+       pip install -r requirements.txt
    ```
    
 
 4. Download the MNIST Dataset:
    Run the mnist_pipeline.py script to download the dataset:
    ```
-      python scripts/mnist_pipeline.py
+       python scripts/mnist_pipeline.py
    ```
 
 5. Plot and view encoded_images using the coding functions(ftts_encode and phase_encode) :
    If you want to look at the spikes generated using both ftts and phase function, run and check ftts_and_spike_train.png in plots folder:
    ```
-         python Visualisation/plot_encoded_images.py
+       python Visualisation/plot_encoded_images.py
    ```
 
 6. Plot and view memory voltages produced using the spiking model:
