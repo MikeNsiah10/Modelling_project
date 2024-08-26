@@ -13,6 +13,8 @@ This repository is designed for working with the MNIST dataset, implementing var
     ├── model.py                   # Model definition without STDP
     ├── spiking_model.py              # Model and state during simualtion definition
     └── mnist_pipeline.py          # Script to download MNIST datasets
+/learning_algorithm
+    ├─ superspike_algo.py          #scripts of the superspike gradient implementation 
 /visualization                     # Functions for plotting and visualizations
     ├── plot_confusion_matrix.py     # Script for plotting the confusion matrix
     ├── plot_encoded_images.py     # Script for visualizing and comparing FTTS and Phase encoding methods for MNIST images
