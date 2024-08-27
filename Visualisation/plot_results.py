@@ -25,66 +25,78 @@ def plot_results(results, encoding,filename="training_results.png"):
     test_accuracies = results['test_accuracies']
     total_spikes = results['total_spikes']
     total_synaptic_operations = results['total_synaptic_operations']
-    
-    #subplot for train losses
+
+    #subplots for train_losses
     plt.subplot(3, 2, 1)
     plt.plot(range(1, len(train_losses) + 1), train_losses, label='Training Loss', color='blue')
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
     plt.legend()
     plt.title(f'Training Loss over Epochs ({encoding} encoding)')
-    
-     #subplot for test losses
+    plt.xlim(1, len(train_losses))
+    plt.xticks(range(1, len(train_losses) + 1))
+
+     #subplots for test_losses
     plt.subplot(3, 2, 2)
     plt.plot(range(1, len(test_losses) + 1), test_losses, label='Testing Loss', color='orange')
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
     plt.legend()
     plt.title(f'Testing Loss over Epochs ({encoding} encoding)')
+    plt.xlim(1, len(test_losses))
+    plt.xticks(range(1, len(test_losses) + 1))
 
-     #subplot for train accuracies
+    #subplots for train_accuracies
     plt.subplot(3, 2, 3)
     plt.plot(range(1, len(train_accuracies) + 1), train_accuracies, label='Training Accuracy', color='green')
     plt.xlabel('Epochs')
     plt.ylabel('Accuracy')
     plt.legend()
     plt.title(f'Training Accuracy over Epochs ({encoding} encoding)')
+    plt.xlim(1, len(train_accuracies))
+    plt.xticks(range(1, len(train_accuracies) + 1))
 
-     #subplot for test accuracies
+     #subplots for test_losses
     plt.subplot(3, 2, 4)
     plt.plot(range(1, len(test_accuracies) + 1), test_accuracies, label='Testing Accuracy', color='red')
     plt.xlabel('Epochs')
     plt.ylabel('Accuracy')
     plt.legend()
     plt.title(f'Testing Accuracy over Epochs ({encoding} encoding)')
+    plt.xlim(1, len(test_accuracies))
+    plt.xticks(range(1, len(test_accuracies) + 1))
 
-    #subplot for total spike count
+     #subplots for spike count
     plt.subplot(3, 2, 5)
-    plt.plot(range(1, 2), total_spikes, label='Total Spikes', color='purple', marker='o')
+    if total_spikes != 0:
+        plt.plot(len(train_losses), total_spikes, label='Total Spikes', color='purple', marker='o')
+        plt.annotate(f'{total_spikes:,.0f}',
+                     xy=(len(train_losses), total_spikes),
+                     xytext=(len(train_losses), total_spikes * 1.1),
+                     arrowprops=dict(facecolor='black', shrink=0.05),
+                     fontsize=12)
     plt.xlabel('Epochs')
     plt.ylabel('Spike Count')
     plt.legend()
     plt.title(f'Total Spikes ({encoding} encoding)')
-    #annotate with the number
-    plt.annotate(f'{total_spikes[-1]:,.0f}', 
-                 xy=(1, total_spikes[-1]), 
-                 xytext=(1, total_spikes[-1] * 1.1),
-                 arrowprops=dict(facecolor='black', shrink=0.05),
-                 fontsize=12)
-    
-    #subplot for total synaptic operations
+    plt.xlim(0, len(train_losses) + 1)
+    plt.xticks(range(1, len(train_losses) + 1))
+
+     #subplots for synaptic operations
     plt.subplot(3, 2, 6)
-    plt.plot(range(1, 2), total_synaptic_operations, label='Total Synaptic Operations', color='brown', marker='o')
+    if total_synaptic_operations != 0:
+        plt.plot(len(train_losses), total_synaptic_operations, label='Total Synaptic Operations', color='brown', marker='o')
+        plt.annotate(f'{total_synaptic_operations:,.0f}',
+                     xy=(len(train_losses), total_synaptic_operations),
+                     xytext=(len(train_losses), total_synaptic_operations * 1.1),
+                     arrowprops=dict(facecolor='black', shrink=0.05),
+                     fontsize=12)
     plt.xlabel('Epochs')
     plt.ylabel('Synaptic Operations')
     plt.legend()
     plt.title(f'Total Synaptic Operations ({encoding} encoding)')
-
-    plt.annotate(f'{total_synaptic_operations[-1]:,.0f}', 
-                 xy=(1, total_synaptic_operations[-1]), 
-                 xytext=(1, total_synaptic_operations[-1] * 1.1),
-                 arrowprops=dict(facecolor='black', shrink=0.05),
-                 fontsize=12)
+    plt.xlim(0, len(train_losses) + 1)
+    plt.xticks(range(1, len(train_losses) + 1))
 
     plt.tight_layout()
     plt.savefig(os.path.join(plots_dir, filename))

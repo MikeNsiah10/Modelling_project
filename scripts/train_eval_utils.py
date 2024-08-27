@@ -107,8 +107,8 @@ def train_and_evaluate(model, device, train_loader, test_loader, optimizer, num_
         'train_accuracies': train_accuracies,
         'test_losses': test_losses,
         'test_accuracies': test_accuracies,
-        'total_spikes': [total_spikes],
-        'total_synaptic_operations': [total_synaptic_operations]
+        'total_spikes': total_spikes,
+        'total_synaptic_operations': total_synaptic_operations
     }
 
     return results
